@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Chat djanog</title>
+    </head>
+    <body>
+
+        <h1>My First Heading</h1>
+        <p>My first paragraph.</p>
+        <form action="" id="form">
+            <input type="text" name="input" />
+            <input type="file" name="" id="file-input">
+            <input type="submit" value="submit">
+        </form>
+        <div id="messages"></div>
+
+        <script type="text/javascript" >
+            let url = `ws://${window.location.host}/ws/socket-server/`
+            const chatSocket = new WebSocket(url)
+            chatSocket.onmessage = function(e){
+                // let data = JSON.parse(e.data)
+                console.log("Data: ", e.data)
+                // if (data.type === 'file') {
+                //     console.log(data.message)
+                //     const fileData = data.file;
+                //     const reader = new FileReader();
+                //     reader.onload = function(event) {
+                //         const arrayBuffer = event.target.result;
+
+                //         // Handle the file based on its type
+                //         if (true) {
+                //             // If it's an image, create an image element and display it
+                //             const img = document.createElement('img');
+                //             img.src = URL.createObjectURL(new Blob([arrayBuffer], { type: fileData.type }));
+                //             document.body.appendChild(img);
+                //         } else {
+                //             // For other file types, create a download link
+                //             const link = document.createElement('a');
+                //             link.href = URL.createObjectURL(new Blob([arrayBuffer], { type: fileData.type }));
+                //             link.download = 'file'; // Set desired file name
+                //             link.textContent = 'Download File';
+                //             document.body.appendChild(link);
+                //         }
+                //     };
+                //     // reader.readAsArrayBuffer(fileData);
+
+                // } else if (data.type === 'chat') {
+                //     // Handle regular chat messages
+                //     let messages = document.getElementById('messages')
+                //     messages.insertAdjacentHTML('beforeend', `
+                //         <div>
+                //             <p>${data.message}</p>    
+                //         </div>
+                //     `)
+                //     // Process and display the chat message as desired
+                // }
+            }
+            let form = document.getElementById('form')
+            const fileInput = document.getElementById('file-input');
+            let file = null
+            fileInput.addEventListener('change',(e)=>{
+                file = e.target.files[0];
+            })
+
+            
+
+            form.addEventListener('submit', (e)=>{
+                e.preventDefault()
+                if (file) {
+                    const chunkSize = 4096; // Adjust the chunk size as needed
+                    let offset = 0;
+
+                    const readNextChunk = () => {
+                    const reader = new FileReader();
+                    const blob = file.slice(offset, offset + chunkSize);
+
+                    reader.onload = function(event) {
+                        if (event.target.readyState === FileReader.DONE) {
+                        const chunk = event.target.result;
+                        // console.log(chunk)
+                        chatSocket.send(chunk);
+
+                        offset += chunkSize;
+
+                        if (offset < file.size) {
+                            readNextChunk();
+                        }
+                        }
+                    };
+
+                    reader.readAsArrayBuffer(blob);
+                    };
+
+                    readNextChunk();
+                }
+                // reader.readAsArrayBuffer(file);
+                if(e.target.input.value){
+                    let message = e.target.input.value
+                    chatSocket.send(JSON.stringify({
+                        "message": message
+                    }))
+                }
+                form.reset()
+            })
+        </script>
+    </body>
+</html> 
