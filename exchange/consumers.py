@@ -16,27 +16,38 @@ class chatConsumer(WebsocketConsumer):
         }))
 
 
-    def receive(self, bytes_data):
+    def receive(self, text_data=None, bytes_data=None, is_json=False):
         # binary_data = base64.b64decode(bytes_data)
-        print(type(bytes_data))
-        # binary_data = text_data.encode('utf-8')
-        # text_data_json = json.loads(text_data)
-        print("receive")
-        async_to_sync(self.channel_layer.group_send)(
-                self.room_group_name,
-                {
-                    'type': 'file_message',
-                    'message': bytes_data,
-                }
-            )
+        print("HIHIHI")
+        if(bytes_data):
+            print(type(bytes_data))
+            # binary_data = text_data.encode('utf-8')
+            # text_data_json = json.loads(text_data)
+            print("receive")
+            async_to_sync(self.channel_layer.group_send)(
+                    self.room_group_name,
+                    {
+                        'type': 'file_message' ,
+                        'message': bytes_data,
+                    }
+                )
+        if(text_data):
+            json_data = json.loads(text_data)
+            async_to_sync(self.channel_layer.group_send)(
+                    self.room_group_name,
+                    {
+                        'type': 'json_message' ,
+                        'message': json_data,
+                    }
+                )
     
     def file_message(self, event):
         file_data = event['message']
         self.send(bytes_data=file_data)
 
-    def chat_message(self, event):
+    def json_message(self, event):
         message = event['message']
         self.send(text_data=json.dumps({
-            'type': 'chat',
+            'type': 'extension',
             'message': message,
         }))
