@@ -5,6 +5,7 @@ import base64
 class chatConsumer(WebsocketConsumer):
     def connect(self):
         self.room_group_name = 'test'
+        print("Connection ")
         async_to_sync(self.channel_layer.group_add)(
             self.room_group_name,
             self.channel_name
@@ -43,6 +44,9 @@ class chatConsumer(WebsocketConsumer):
     
     def file_message(self, event):
         file_data = event['message']
+        exclude_sender = event.get('exclude_sender', False)
+        # if exclude_sender and self.scope['session'].session_key == event.get('sender_session_key'):
+        #     return  # Skip sending the file message to the sender
         self.send(bytes_data=file_data)
 
     def json_message(self, event):
