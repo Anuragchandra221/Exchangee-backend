@@ -1,0 +1,1 @@
+web: gunicorn exchangee_backend.asgi
